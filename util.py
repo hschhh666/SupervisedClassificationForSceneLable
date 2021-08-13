@@ -10,6 +10,7 @@ import sys
 import os
 from dataset import ImageFolderInstance
 from torchvision import transforms
+from torch.nn import functional as F
 
 def print_running_time(start_time):
     print()
@@ -122,6 +123,7 @@ def classify(model, args):
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
 
     labels = []
+    outs = []
     # 数据加载完毕
     for idx,(img, target, index) in enumerate(data_loader):
         if torch.cuda.is_available():
@@ -132,16 +134,23 @@ def classify(model, args):
         pred = pred.t()
         if torch.cuda.is_available():
             pred = pred.cpu()
+            out = out.detach().cpu()
+            out = F.softmax(out, dim=1)
         pred = list(pred.numpy()[0])
+        out = list(out.numpy())
         labels += pred
+        outs += out
     labels = np.array(labels)
+    outs = np.array(outs)
     np.save(os.path.join(args.result_path, 'lables.npy'),labels)
+    np.save(os.path.join(args.result_path, 'prob.npy'),outs)
 
     # ===============================临时代码，用完就删掉===============================
     data_folder = '/home/hsc/Research/FewAnchorPointsBasedSceneLabeling/data/20210329CampusData/round3/allFrame'
     dataset = ImageFolderInstance(data_folder, transform=transform)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
     labels = []
+    outs = []
     # 数据加载完毕
     for idx,(img, target, index) in enumerate(data_loader):
         if torch.cuda.is_available():
@@ -152,16 +161,23 @@ def classify(model, args):
         pred = pred.t()
         if torch.cuda.is_available():
             pred = pred.cpu()
+            out = out.detach().cpu()
+            out = F.softmax(out, dim=1)
         pred = list(pred.numpy()[0])
+        out = list(out.numpy())
         labels += pred
+        outs += out
     labels = np.array(labels)
+    outs = np.array(outs)
     np.save(os.path.join(args.result_path, 'lables_round3.npy'),labels)
+    np.save(os.path.join(args.result_path, 'prob_round3.npy'),outs)
 
     # ===============================临时代码，用完就删掉===============================
     data_folder = '/home/hsc/Research/FewAnchorPointsBasedSceneLabeling/data/20210329CampusData/round1/allFrame'
     dataset = ImageFolderInstance(data_folder, transform=transform)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
     labels = []
+    outs = []
     # 数据加载完毕
     for idx,(img, target, index) in enumerate(data_loader):
         if torch.cuda.is_available():
@@ -172,10 +188,16 @@ def classify(model, args):
         pred = pred.t()
         if torch.cuda.is_available():
             pred = pred.cpu()
+            out = out.detach().cpu()
+            out = F.softmax(out, dim=1)
         pred = list(pred.numpy()[0])
+        out = list(out.numpy())
         labels += pred
+        outs += out
     labels = np.array(labels)
+    outs = np.array(outs)
     np.save(os.path.join(args.result_path, 'lables_round1.npy'),labels)
+    np.save(os.path.join(args.result_path, 'prob_round1.npy'),outs)
 
 if __name__ == '__main__':
     data = torch.randn((5,3))

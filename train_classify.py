@@ -239,7 +239,7 @@ def main():
     print('start training at ' + time.strftime("%Y_%m_%d %H:%M:%S", time.localtime()))
     start_time = time.time()
     min_loss = np.inf
-    best_model_path = ''
+    best_model_path = args.resume
     for epoch in range(args.start_epoch, args.epochs + 1):
 
         adjust_learning_rate(epoch, args, optimizer)
