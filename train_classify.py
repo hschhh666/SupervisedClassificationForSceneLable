@@ -118,12 +118,13 @@ def get_train_loader(args):
 
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(224, scale=(args.crop_low, 1.)),
-        transforms.Resize((224,224)),
-        transforms.RandomGrayscale(p=0.2),
+        transforms.RandomGrayscale(p=0.5),
         transforms.RandomHorizontalFlip(),
         transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
+        transforms.GaussianBlur(9, (0.1,3)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=mean, std=std)
+        transforms.Normalize(mean=mean, std=std),
+        transforms.RandomPerspective(distortion_scale=0.5, p=0.5)
     ])
     
     train_dataset = ImageFolderInstance(data_folder, transform=train_transform)

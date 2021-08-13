@@ -138,6 +138,26 @@ def classify(model, args):
     np.save(os.path.join(args.result_path, 'lables.npy'),labels)
 
     # ===============================临时代码，用完就删掉===============================
+    data_folder = '/home/hsc/Research/FewAnchorPointsBasedSceneLabeling/data/20210329CampusData/round3/allFrame'
+    dataset = ImageFolderInstance(data_folder, transform=transform)
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
+    labels = []
+    # 数据加载完毕
+    for idx,(img, target, index) in enumerate(data_loader):
+        if torch.cuda.is_available():
+            img = img.cuda()
+            model = model.cuda()
+        out = model(img)
+        _, pred = out.topk(1, 1, True, True)
+        pred = pred.t()
+        if torch.cuda.is_available():
+            pred = pred.cpu()
+        pred = list(pred.numpy()[0])
+        labels += pred
+    labels = np.array(labels)
+    np.save(os.path.join(args.result_path, 'lables_round3.npy'),labels)
+
+    # ===============================临时代码，用完就删掉===============================
     data_folder = '/home/hsc/Research/FewAnchorPointsBasedSceneLabeling/data/20210329CampusData/round1/allFrame'
     dataset = ImageFolderInstance(data_folder, transform=transform)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
@@ -156,8 +176,6 @@ def classify(model, args):
         labels += pred
     labels = np.array(labels)
     np.save(os.path.join(args.result_path, 'lables_round1.npy'),labels)
-
-    
 
 if __name__ == '__main__':
     data = torch.randn((5,3))
