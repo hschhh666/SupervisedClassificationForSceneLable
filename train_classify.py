@@ -270,6 +270,7 @@ def main():
 
         #<----------------------------输出在验证集上的分类精度---------------------------->#
         if val_loader != None and epoch % args.validation_frequency == 0:
+            model.eval()
             val_acces = AverageMeter()
             # 数据加载完毕
             for idx,(img, target, index) in enumerate(val_loader):

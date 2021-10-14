@@ -25,50 +25,58 @@ class alexnet(nn.Module):
         return feat_sample
 
 class alexnet_half(nn.Module):
-    def __init__(self, in_channel=1, feat_dim=128, class_num=3):
+    def __init__(self, in_channel=1, feat_dim=128, class_num=3, dropout = 0.5):
         super(alexnet_half, self).__init__()
         self.conv_block_1 = nn.Sequential(
             nn.Conv2d(in_channel, 96//2, 11, 4, 2, bias=False),
             nn.BatchNorm2d(96//2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, 2),
+            nn.Dropout(dropout),
         )
         self.conv_block_2 = nn.Sequential(
             nn.Conv2d(96//2, 256//2, 5, 1, 2, bias=False),
             nn.BatchNorm2d(256//2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, 2),
+            nn.Dropout(dropout),
         )
         self.conv_block_3 = nn.Sequential(
             nn.Conv2d(256//2, 384//2, 3, 1, 1, bias=False),
             nn.BatchNorm2d(384//2),
             nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
         )
         self.conv_block_4 = nn.Sequential(
             nn.Conv2d(384//2, 384//2, 3, 1, 1, bias=False),
             nn.BatchNorm2d(384//2),
             nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
         )
         self.conv_block_5 = nn.Sequential(
             nn.Conv2d(384//2, 256//2, 3, 1, 1, bias=False),
             nn.BatchNorm2d(256//2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, 2),
+            nn.Dropout(dropout),
         )
         self.fc6 = nn.Sequential(
             nn.Linear(256 * 6 * 6 // 2, 4096 // 2),
             nn.BatchNorm1d(4096 // 2),
             nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
         )
         self.fc7 = nn.Sequential(
             nn.Linear(4096 // 2, 4096 // 2),
             nn.BatchNorm1d(4096 // 2),
             nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
         )
         self.fc8 = nn.Sequential(
             nn.Linear(4096 // 2, feat_dim),
             nn.BatchNorm1d(feat_dim),
             nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
         )
         self.fc9 = nn.Sequential(
             nn.Linear(feat_dim, class_num)
