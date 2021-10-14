@@ -56,6 +56,7 @@ def parse_option():
     # specify folder
     parser.add_argument('--data_folder', type=str, default=None, help='path to training data') # 训练数据文件夹，即锚点/正负样本文件夹
     parser.add_argument('--test_data_folder', type=str, default=None, help='path to testing data') # 测试数据文件夹，即所有视频帧的文件夹
+    parser.add_argument('--validation_frequency',type=int, default=1) # 训练过程中验证分类精度的频率，比如每个epoch都在验证集上测试并输出分类精度，或者每十个epoch在验证集上测试等
     parser.add_argument('--model_path', type=str, default=None, help='path to save model')
     parser.add_argument('--tb_path', type=str, default=None, help='path to tensorboard')
     parser.add_argument('--log_txt_path', type=str, default=None, help='path to log file')
@@ -135,6 +136,26 @@ def get_train_loader(args):
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
 
     return train_loader
+
+def get_val_loader(args):
+    data_folder = os.path.join(args.data_folder,'val')
+    if not os.path.exists(data_folder):
+        print('No validation data. It\'s ok, but there are no validation classiying results.')
+        return None
+    mean=[0.485, 0.456, 0.406]
+    std=[0.229, 0.224, 0.225]
+    transform = transforms.Compose([
+        transforms.Resize((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=mean, std=std)
+    ])
+    val_dataset = ImageFolderInstance(data_folder, transform=transform)
+    n_data = len(val_dataset)
+    print('number of validation samples: {}'.format(n_data))
+
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
+
+    return val_loader
 
 def set_model(args):
 
@@ -225,6 +246,7 @@ def main():
 
     # set the loader
     train_loader = get_train_loader(args)
+    val_loader = get_val_loader(args)
 
     # set the model
     model, criterion = set_model(args)
@@ -246,9 +268,23 @@ def main():
 
         loss = train_e2e(epoch, train_loader, model, criterion, optimizer, args)
 
-        print_running_time(start_time)
+        #<----------------------------输出在验证集上的分类精度---------------------------->#
+        if val_loader != None and epoch % args.validation_frequency == 0:
+            val_acces = AverageMeter()
+            # 数据加载完毕
+            for idx,(img, target, index) in enumerate(val_loader):
+                bsz = img.size(0)
+                if torch.cuda.is_available():
+                    img = img.cuda()
+                    target = target.cuda()
+                out = model(img)
+                acc = accuracy(out, target)[0]
+                val_acces.update(acc.item(),bsz)
+            print('Epoch %d Validation accuracy %.3f%%'%(epoch, val_acces.avg))
 
-        # save model
+        print_running_time(start_time) # 输出截至当前运行的时长
+
+        #<----------------------------按照一定频率保存模型---------------------------->#
         if epoch % args.save_freq == 0:
             print('==> Saving...')
             state = {
@@ -264,6 +300,7 @@ def main():
             # help release GPU memory
             del state
 
+        #<----------------------------保存最好的模型---------------------------->#
         if loss < min_loss:
             if min_loss != np.inf:
                 os.remove(best_model_path)
@@ -281,7 +318,8 @@ def main():
             torch.save(state, best_model_path)
             # help release GPU memory
             del state
-    
+
+        
     print("==================== Training finished. Start testing ====================")
     print('==> loading best model')
     print('min loss = %.3f'%min_loss)
