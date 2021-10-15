@@ -261,6 +261,7 @@ def main():
     print('start training at ' + time.strftime("%Y_%m_%d %H:%M:%S", time.localtime()))
     start_time = time.time()
     min_loss = np.inf
+    max_val_acc = 0
     best_model_path = args.resume
     for epoch in range(args.start_epoch, args.epochs + 1):
 
@@ -281,7 +282,9 @@ def main():
                 out = model(img)
                 acc = accuracy(out, target)[0]
                 val_acces.update(acc.item(),bsz)
-            print('Epoch %d Validation accuracy %.3f%%'%(epoch, val_acces.avg))
+
+            best_acc_tmp = val_acces.avg if max_val_acc < val_acces.avg else max_val_acc
+            print('Epoch %d Validation accuracy %.3f%%, best validation accuracy %.3f%%'%(epoch, val_acces.avg, best_acc_tmp))
 
         print_running_time(start_time) # 输出截至当前运行的时长
 
@@ -302,10 +305,10 @@ def main():
             del state
 
         #<----------------------------保存最好的模型---------------------------->#
-        if loss < min_loss:
-            if min_loss != np.inf:
+        if max_val_acc < val_acces.avg:
+            if max_val_acc != 0:
                 os.remove(best_model_path)
-            min_loss = loss
+            max_val_acc = val_acces.avg
             best_model_path = os.path.join(args.model_folder, 'ckpt_epoch_{epoch}_Best.pth'.format(epoch=epoch))
             print('==> Saving best model...')
             state = {
@@ -323,7 +326,8 @@ def main():
         
     print("==================== Training finished. Start testing ====================")
     print('==> loading best model')
-    print('min loss = %.3f'%min_loss)
+    # print('min loss = %.3f'%min_loss)
+    print('max val acc = %.3f'%max_val_acc)
     if torch.cuda.is_available():
         ckpt = torch.load(best_model_path)
     else:
