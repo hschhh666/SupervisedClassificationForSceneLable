@@ -32,33 +32,33 @@ class alexnet_half(nn.Module):
             nn.BatchNorm2d(96//2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, 2),
-            nn.Dropout(dropout),
+            # nn.Dropout(dropout),
         )
         self.conv_block_2 = nn.Sequential(
             nn.Conv2d(96//2, 256//2, 5, 1, 2, bias=False),
             nn.BatchNorm2d(256//2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, 2),
-            nn.Dropout(dropout),
+            # nn.Dropout(dropout),
         )
         self.conv_block_3 = nn.Sequential(
             nn.Conv2d(256//2, 384//2, 3, 1, 1, bias=False),
             nn.BatchNorm2d(384//2),
             nn.ReLU(inplace=True),
-            nn.Dropout(dropout),
+            # nn.Dropout(dropout),
         )
         self.conv_block_4 = nn.Sequential(
             nn.Conv2d(384//2, 384//2, 3, 1, 1, bias=False),
             nn.BatchNorm2d(384//2),
             nn.ReLU(inplace=True),
-            nn.Dropout(dropout),
+            # nn.Dropout(dropout),
         )
         self.conv_block_5 = nn.Sequential(
             nn.Conv2d(384//2, 256//2, 3, 1, 1, bias=False),
             nn.BatchNorm2d(256//2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, 2),
-            nn.Dropout(dropout),
+            # nn.Dropout(dropout),
         )
         self.fc6 = nn.Sequential(
             nn.Linear(256 * 6 * 6 // 2, 4096 // 2),
